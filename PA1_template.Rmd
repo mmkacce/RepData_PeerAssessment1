@@ -1,0 +1,165 @@
+#Reproductible Research
+##Course Project
+### Martin Markus
+
+---
+date: "5 December 2016"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+###1.Loading and preprocessing the data
+
+```{r loading, echo = TRUE}
+setwd("C:/Users/markmar/My Documents")
+
+data <- read.csv("activity.csv")
+
+clear_data <- aggregate(data$steps, by=list(data$date), FUN=sum, na.rm=TRUE)
+names(clear_data) <- c("date", "total")
+```
+
+###2. What is mean total number of steps taken per day?
+
+
+Creating the histogram
+
+```{r hist, echo = TRUE}
+
+hist(clear_data$total, 
+     main="Daily total Steps",
+     breaks=seq(from=0, to=25000, by=2500),
+     xlab="Total Steps", 
+     border="black", 
+     col="blue",
+     ylim=c(0,40))
+
+```
+
+
+Reporting the mean and the median
+
+```{r, = TRUE}
+mean(clear_data$total)
+median(clear_data$total)
+```
+
+
+###3. What is the average daily activity pattern?
+
+Aggregating, preparing the raw dataset
+
+
+```{r, echo = TRUE}
+clear_data3 <- aggregate(data$steps, by=list(data$interval), FUN=mean, na.rm=TRUE)
+names(clear_data3) <- c("interval", "mean")
+```
+
+Creating the line chart
+
+```{r, echo = TRUE}
+
+plot(clear_data3$interval, 
+     clear_data3$mean,
+     type = "l", 
+     col="green", 
+     lwd = 2,
+     xlab="Minutes", 
+     ylab="Average number of Steps", 
+     main="Average number of steps / intervals")
+
+```
+
+Determining the best preforming interval across all the days
+
+```{r, echo = TRUE}
+
+max <- which(clear_data3$mean == max(clear_data3$mean))
+max <- clear_data3[max, 1]
+max
+
+```
+
+### 4. Imputing missing values
+
+Total number of missing values
+
+```{r, echo = TRUE}
+
+nas <- sum(is.na(data$steps))
+
+```
+
+Filling in all of the missing values in the dataset
+
+```{r, echo = TRUE}
+
+nas2 <- nas2 <- which(is.na(data$steps))
+head(nas2)
+nas3 <- rep(mean(data$steps, na.rm=TRUE), times=length(nas2))
+head(nas3)
+
+```
+
+Create a new dataset replacing the NA's
+
+```{r, echo = TRUE}
+
+data[nas2, "steps"] <- nas3
+
+```
+
+Create a histogram 
+
+```{r, echo = TRUE}
+
+nadata <- aggregate(data$steps, by=list(data$date), FUN=sum)
+names(nadata) <- c("date", "total") 
+
+hist(nadata$total,
+     breaks=seq(from=0, to=25000, by=2500),
+     xlab="Total Steps", 
+     border="red", 
+     col="green",
+     ylim=c(0,40),
+     main="Total number of steps taken each day without missing values")
+
+```
+
+### 5. Are there differences in activity patterns between weekdays and weekends?
+
+Create a new factor variable to decide whether a day is weekday or weekend
+
+```{r, echo = TRUE}
+whichday <- function(date) {
+  day <- weekdays(date)
+  if (day %in% c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday"))
+    return("weekday")
+  else if (day %in% c("Saturday", "Sunday"))
+    return("weekend")
+  else
+    stop("invalid date")
+}
+
+data$date <- as.Date(data$date)
+data$day <- sapply(data$date, FUN=whichday)
+
+
+```
+
+Creating a panel plot to compare the weekend and the weekday activity
+
+```{r, echo = TRUE}
+library(ggplot2)
+
+wow <- aggregate(steps ~ interval + day, data=data, mean)
+ggplot(wow, aes(interval, steps)) + geom_line() + facet_grid(day ~ .) +
+  xlab("Interval") + ylab("Number of steps") 
+
+```
+
+
+
